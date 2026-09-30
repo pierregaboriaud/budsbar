@@ -104,19 +104,13 @@ struct PanelView: View {
     // MARK: restore sound
 
     private var restore: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "arrow.triangle.2.circlepath")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.secondary)
-                .frame(width: 18)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Restore sound automatically").font(.system(size: 13))
-                Text(restoreCaption).font(.caption).foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 4)
-            Toggle("", isOn: $model.recoveryEnabled).toggleStyle(.switch).controlSize(.small).labelsHidden()
+        VStack(spacing: 0) {
+            SwitchRow(symbol: "arrow.triangle.2.circlepath", title: "Restore sound",
+                      caption: restoreCaption, isOn: $model.recoveryEnabled)
+            Divider().padding(.leading, 38)
+            SwitchRow(symbol: "play.fill", title: "Resume playback",
+                      caption: "If taking them out paused it", isOn: $model.resumeEnabled)
         }
-        .padding(10)
         .card()
     }
 
@@ -271,6 +265,30 @@ private struct NoiseButton: View {
         case .noiseCancelling: return "ANC"
         case .ambient: return "Ambient"
         }
+    }
+}
+
+private struct SwitchRow: View {
+    let symbol: String
+    let title: String
+    let caption: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title).font(.system(size: 13))
+                Text(caption).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 4)
+            Toggle("", isOn: $isOn).toggleStyle(.switch).controlSize(.small).labelsHidden()
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
     }
 }
 

@@ -40,16 +40,27 @@ final class AppModel: ObservableObject {
         }
     }
 
+    @Published var resumeEnabled: Bool {
+        didSet {
+            defaults.set(resumeEnabled, forKey: "resume")
+            resume.setEnabled(resumeEnabled)
+        }
+    }
+
     private let link: BudsLink
     private let recovery: CallLinkRecovery
+    private let resume: PlaybackResume
     private let defaults = UserDefaults.standard
 
-    init(link: BudsLink, recovery: CallLinkRecovery) {
+    init(link: BudsLink, recovery: CallLinkRecovery, resume: PlaybackResume) {
         self.link = link
         self.recovery = recovery
+        self.resume = resume
         barStyle = BarStyle(rawValue: defaults.string(forKey: "barStyle") ?? "") ?? .all
         recoveryEnabled = defaults.object(forKey: "recovery") as? Bool ?? true
+        resumeEnabled = defaults.object(forKey: "resume") as? Bool ?? true
         recovery.setEnabled(recoveryEnabled)
+        resume.setEnabled(resumeEnabled)
         recovery.onRecovered = { [weak self] _ in
             DispatchQueue.main.async { self?.lastRecovery = Date() }
         }

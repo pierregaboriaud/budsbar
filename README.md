@@ -17,6 +17,8 @@ get after taking the earbuds out and putting them back in.
 - **Noise control** — off, noise cancelling, ambient sound.
 - **Output and microphone** — pick the Mac's sound output and input from the same panel.
 - **Restores the sound automatically** when you put the earbuds back in (see below).
+- **Resumes playback** — the Buds pause your music when you take them out and never restart it;
+  BudsBar presses play when they go back in (only if it was the Buds that paused it).
 - Launch at login. No telemetry, no network access, no dependencies.
 
 ## The silence after taking them out
@@ -66,7 +68,7 @@ build/BudsBar.app/Contents/MacOS/BudsBar --snapshot panel.png   # draw the panel
 ```
 
 - `Sources/BudsKit` — protocol framing and status parsing, CoreAudio helpers, the call-link
-  recovery. No UI.
+  recovery, playback resume. No UI.
 - `Sources/BudsBar` — the app: Bluetooth control channel (`IOBluetooth` RFCOMM), menu-bar item,
   SwiftUI panel.
 
@@ -77,6 +79,10 @@ with the earbuds.
 macOS ties the Bluetooth permission to the app's code signature. `build-app.sh` signs with an
 "Apple Development" certificate when there is one in the keychain (or `CODESIGN_IDENTITY`), and
 ad hoc otherwise — in which case macOS asks for Bluetooth access again after each rebuild.
+
+Two things have no public API and are done the only way available: the state of the call link
+and the earbuds' pause commands are read from the Bluetooth daemon's log (`log stream`), and the
+play command goes through the private MediaRemote framework.
 
 ## Acknowledgements
 

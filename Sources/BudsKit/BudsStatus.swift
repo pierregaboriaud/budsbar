@@ -46,6 +46,11 @@ public struct BudsStatus: Equatable {
         return placementLeft == .wearing || placementRight == .wearing
     }
 
+    /// How many earbuds are in an ear. nil until the Buds have reported a placement.
+    public var wornCount: Int? {
+        isWorn == nil ? nil : [placementLeft, placementRight].filter { $0 == .wearing }.count
+    }
+
     /// Updates from a frame; returns false when the frame carries no status.
     @discardableResult
     public mutating func apply(_ frame: Frame) -> Bool {

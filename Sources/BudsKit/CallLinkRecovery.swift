@@ -35,8 +35,6 @@ public final class CallLinkRecovery {
     private var episodeSince: Date?
     private var attempts = 0
     private var waitingForWear = false
-    private var stream: Process?
-    private var stopped = false
 
     /// Called on an arbitrary queue each time a recovery completes.
     public var onRecovered: ((Int) -> Void)?
@@ -48,14 +46,9 @@ public final class CallLinkRecovery {
 
     // MARK: inputs
 
-    public func start() {
-        Thread.detachNewThread { [weak self] in
-            // `log stream` dies across some sleep/wake cycles: keep one running.
-            while let self, !self.queue.sync(execute: { self.stopped }) {
-                self.runLogStream()
-                Thread.sleep(forTimeInterval: 2)
-            }
-        }
+    /// A line of the bluetoothd log (see `BluetoothLog`).
+    public func logLine(_ line: String) {
+        queue.async { self.handle(line) }
     }
 
     public func setEnabled(_ value: Bool) {
@@ -204,39 +197,5 @@ public final class CallLinkRecovery {
         let buds = AudioDevices.allIDs().first { isBuds($0, address) && AudioDevices.hasStreams($0, .input) } ?? input
         if !AudioDevices.select(buds, .input) { log("could not give the microphone back to the earbuds") }
         return held
-    }
-
-    // MARK: bluetoothd log stream
-
-    private func runLogStream() {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/log")
-        task.arguments = ["stream", "--style", "compact", "--predicate",
-                          "process == \"bluetoothd\" AND category == \"Server.Audio\" AND eventMessage CONTAINS \"HFP Stream State\""]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = FileHandle.nullDevice
-        do { try task.run() } catch { log("cannot start log stream: \(error)"); return }
-        queue.async { self.stream = task }
-        var pending = Data()
-        while true {
-            let chunk = pipe.fileHandleForReading.availableData
-            if chunk.isEmpty { break }
-            pending.append(chunk)
-            while let newline = pending.firstIndex(of: 0x0A) {
-                let line = String(decoding: pending[pending.startIndex..<newline], as: UTF8.self)
-                pending.removeSubrange(pending.startIndex...newline)
-                queue.async { self.handle(line) }
-            }
-        }
-        task.waitUntilExit()
-    }
-
-    /// The `log stream` child would outlive the app otherwise.
-    public func stop() {
-        queue.sync {
-            self.stopped = true
-            self.stream?.terminate()
-        }
     }
 }

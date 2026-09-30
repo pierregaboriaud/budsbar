@@ -13,7 +13,11 @@ final class StatusController: NSObject, NSPopoverDelegate {
         popover.behavior = .transient
         popover.animates = true
         popover.delegate = self
-        popover.contentViewController = NSHostingController(rootView: PanelView(model: model))
+        let host = NSHostingController(rootView: PanelView(model: model))
+        // The panel grows and shrinks with what the earbuds report; without this the popover
+        // keeps its first size and cuts the top off.
+        host.sizingOptions = [.preferredContentSize]
+        popover.contentViewController = host
         if let button = item.button {
             let symbol = NSImage(systemSymbolName: "earbuds", accessibilityDescription: "Earbuds")
             symbol?.isTemplate = true
@@ -51,6 +55,10 @@ final class StatusController: NSObject, NSPopoverDelegate {
         }
         guard let button = item.button else { return }
         model.syncSystem()
+        if let view = popover.contentViewController?.view {
+            view.layoutSubtreeIfNeeded()
+            popover.contentSize = view.fittingSize
+        }
         // A menu-bar app is never active on its own; without this a click elsewhere would not
         // dismiss the panel.
         NSApp.activate(ignoringOtherApps: true)
