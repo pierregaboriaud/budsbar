@@ -3,7 +3,7 @@
 //     swift scripts/make-icon.swift            # from the repository root
 //
 // Everything is drawn here (no SF Symbols: their licence does not allow them in app icons):
-// a pair of earbuds inside the battery ring of the panel, on the macOS rounded square.
+// the white pair of earbuds on blue from the panel's header, on the macOS rounded square.
 
 import AppKit
 
@@ -14,30 +14,27 @@ func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> NSColor {
             blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
 }
 
-/// One earbud seen from outside: a pebble-shaped body with the ear tip peeking out below.
-/// `side` is +1 for the left one, -1 for the right one.
-func drawEarbud(center: CGPoint, side: CGFloat, in context: CGContext) {
+/// One earbud in the style of the panel's header glyph: a round head on a short stem, the ear
+/// tip showing on the outer side. `side` is -1 for the left one, +1 for the right one.
+func drawEarbud(centerX: CGFloat, side: CGFloat, in context: CGContext) {
+    let headY: CGFloat = 600
+    let shape = NSBezierPath(ovalIn: CGRect(x: centerX - 104, y: headY - 104, width: 208, height: 208))
+    // The stem hangs from the inner half of the head.
+    shape.append(NSBezierPath(roundedRect: CGRect(x: centerX - side * 34 - 40, y: 292, width: 80, height: 330),
+                              xRadius: 40, yRadius: 40))
+    shape.windingRule = .nonZero
     context.saveGState()
-    context.translateBy(x: center.x, y: center.y)
-    context.rotate(by: -side * 0.16)
-
-    // Ear tip: a silicone dome peeking out below the body, on the outer side.
-    let tip = NSBezierPath(roundedRect: CGRect(x: -side * 30 - 48, y: -166, width: 96, height: 116),
-                           xRadius: 48, yRadius: 48)
-    context.setShadow(offset: CGSize(width: 0, height: -8), blur: 22, color: color(0x050B22, 0.40).cgColor)
-    NSGradient(colors: [color(0xB9C8EC), color(0x93A8DC)])?.draw(in: tip, angle: -90)
-
-    // Body.
-    let body = NSBezierPath(roundedRect: CGRect(x: -86, y: -104, width: 172, height: 216), xRadius: 86, yRadius: 86)
-    NSGradient(colors: [color(0xFFFFFF), color(0xDCE5F8)])?.draw(in: body, angle: -90)
-    context.setShadow(offset: .zero, blur: 0, color: nil)
-
-    // A soft shade towards the other earbud gives the shell some volume.
-    context.saveGState()
-    body.addClip()
-    NSGradient(colors: [color(0xFFFFFF, 0), color(0xAFC0E8, 0.45)])?
-        .draw(from: CGPoint(x: side * 10, y: 0), to: CGPoint(x: side * 86, y: 0), options: [])
+    context.setShadow(offset: CGSize(width: 0, height: -10), blur: 26, color: color(0x0A1C6B, 0.45).cgColor)
+    color(0xFFFFFF).setFill()
+    shape.fill()
     context.restoreGState()
+
+    // Ear tip: a tinted oval on the outer side of the head.
+    context.saveGState()
+    context.translateBy(x: centerX + side * 50, y: headY + 4)
+    context.rotate(by: side * 0.12)
+    NSGradient(colors: [color(0xA8C6FF), color(0x7FA8FA)])?
+        .draw(in: NSBezierPath(ovalIn: CGRect(x: -34, y: -58, width: 68, height: 116)), angle: -90)
     context.restoreGState()
 }
 
@@ -60,31 +57,13 @@ func drawIcon() -> NSBitmapImageRep {
 
     context.saveGState()
     shape.addClip()
-    NSGradient(colors: [color(0x4F8BFF), color(0x2B4FD6), color(0x1A2470)])?.draw(in: square, angle: -65)
+    NSGradient(colors: [color(0x5A9BFF), color(0x2F72F2), color(0x1F4FD0)])?.draw(in: square, angle: -90)
     // A soft light from the top, as on system icons.
     NSGradient(colors: [color(0xFFFFFF, 0.22), color(0xFFFFFF, 0)])?
         .draw(in: CGRect(x: 100, y: 512, width: 824, height: 412), angle: -90)
 
-    // Battery ring: a faint track and a green arc, three quarters full, starting at 12 o'clock.
-    let middle = CGPoint(x: 512, y: 512)
-    let radius: CGFloat = 292
-    let track = NSBezierPath()
-    track.appendArc(withCenter: middle, radius: radius, startAngle: 0, endAngle: 360)
-    track.lineWidth = 50
-    color(0xFFFFFF, 0.16).setStroke()
-    track.stroke()
-
-    let charge = NSBezierPath()
-    charge.appendArc(withCenter: middle, radius: radius, startAngle: 90, endAngle: 90 - 270, clockwise: true)
-    charge.lineWidth = 50
-    charge.lineCapStyle = .round
-    context.setShadow(offset: .zero, blur: 30, color: color(0x63E58A, 0.55).cgColor)
-    color(0x63E58A).setStroke()
-    charge.stroke()
-    context.setShadow(offset: .zero, blur: 0, color: nil)
-
-    drawEarbud(center: CGPoint(x: 512 - 104, y: 548), side: 1, in: context)
-    drawEarbud(center: CGPoint(x: 512 + 104, y: 548), side: -1, in: context)
+    drawEarbud(centerX: 512 - 128, side: -1, in: context)
+    drawEarbud(centerX: 512 + 128, side: 1, in: context)
     context.restoreGState()
 
     NSGraphicsContext.restoreGraphicsState()
