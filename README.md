@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon.png" width="128" alt="BudsBar icon"></p>
+
 # BudsBar
 
 A small macOS menu-bar app for Samsung Galaxy Buds: battery of each earbud and of the case next
@@ -65,6 +67,7 @@ Reports from other models are welcome.
 swift test                      # protocol and status parsing
 ./scripts/build-app.sh          # build/BudsBar.app
 build/BudsBar.app/Contents/MacOS/BudsBar --snapshot panel.png   # draw the panel with sample data
+swift scripts/make-icon.swift   # redraw the app icon (Resources/AppIcon.icns)
 ```
 
 - `Sources/BudsKit` — protocol framing and status parsing, CoreAudio helpers, the call-link
