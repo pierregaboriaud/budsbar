@@ -67,7 +67,7 @@ Reports from other models are welcome.
 swift test                      # protocol and status parsing
 ./scripts/build-app.sh          # build/BudsBar.app
 build/BudsBar.app/Contents/MacOS/BudsBar --snapshot panel.png   # draw the panel with sample data
-swift scripts/make-icon.swift   # redraw the app icon (Resources/AppIcon.icns)
+./scripts/make-icon.sh          # redraw the app icon from Sources/BudsBar/Artwork.swift
 ```
 
 - `Sources/BudsKit` — protocol framing and status parsing, CoreAudio helpers, the call-link

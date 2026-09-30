@@ -19,9 +19,7 @@ final class StatusController: NSObject, NSPopoverDelegate {
         host.sizingOptions = [.preferredContentSize]
         popover.contentViewController = host
         if let button = item.button {
-            let symbol = NSImage(systemSymbolName: "earbuds", accessibilityDescription: "Earbuds")
-            symbol?.isTemplate = true
-            button.image = symbol
+            button.image = Artwork.menuBarImage()
             button.imagePosition = .imageLeading
             button.target = self
             button.action = #selector(toggle)

@@ -41,6 +41,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+// `BudsBar --icon icon.png` writes the 1024-pixel app icon, `--glyph glyph.png` the menu-bar
+// drawing enlarged on grey: see scripts/make-icon.sh.
+if let flag = CommandLine.arguments.firstIndex(of: "--icon"), CommandLine.arguments.count > flag + 1 {
+    let data = Artwork.appIcon()?.representation(using: .png, properties: [:])
+    try? data?.write(to: URL(fileURLWithPath: CommandLine.arguments[flag + 1]))
+    exit(data == nil ? 1 : 0)
+}
+if let flag = CommandLine.arguments.firstIndex(of: "--glyph"), CommandLine.arguments.count > flag + 1 {
+    let side: CGFloat = 288
+    let preview = NSImage(size: NSSize(width: side * 2, height: side), flipped: true) { rect in
+        NSColor(white: 0.2, alpha: 1).setFill()
+        rect.fill()
+        guard let context = NSGraphicsContext.current?.cgContext else { return false }
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
+        Artwork.draw(in: context, rect: CGRect(x: 0, y: 0, width: side, height: side),
+                     body: NSColor.white.cgColor, tip: NSColor.white.cgColor, gap: 5)
+        context.endTransparencyLayer()
+        // The same drawing at the size of the menu bar, twice over for a Retina screen.
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
+        Artwork.draw(in: context, rect: CGRect(x: side + 60, y: 120, width: 36, height: 36),
+                     body: NSColor.white.cgColor, tip: NSColor.white.cgColor, gap: 5)
+        context.endTransparencyLayer()
+        return true
+    }
+    let data = preview.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0) }?
+        .representation(using: .png, properties: [:])
+    try? data?.write(to: URL(fileURLWithPath: CommandLine.arguments[flag + 1]))
+    exit(0)
+}
+
 // `BudsBar --snapshot panel.png [dark|light]` draws the panel with sample data into a PNG: the
 // way to look at a design change (and to make the README screenshot) without earbuds.
 if let flag = CommandLine.arguments.firstIndex(of: "--snapshot"), CommandLine.arguments.count > flag + 1 {

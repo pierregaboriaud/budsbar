@@ -33,9 +33,8 @@ struct PanelView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            EarbudsGlyph(body: model.name == nil ? Color.secondary : Color.white,
-                         tips: model.name == nil ? Color.primary.opacity(0.25) : Color.accentColor.opacity(0.8))
-                .frame(width: 22, height: 22)
+            Image(nsImage: Artwork.image(side: 28, body: model.name == nil ? .secondaryLabelColor : .white,
+                                         tip: model.name == nil ? .tertiaryLabelColor : NSColor(white: 1, alpha: 0.6)))
                 .frame(width: 34, height: 34)
                 .background(Circle().fill(model.name == nil ? Color.primary.opacity(0.08) : Color.accentColor))
             VStack(alignment: .leading, spacing: 1) {
@@ -61,11 +60,11 @@ struct PanelView: View {
 
     private var batteries: some View {
         HStack(spacing: 0) {
-            BatteryGauge(symbol: "earbud.left", title: "Left", level: model.status.left,
+            BatteryGauge(bud: -1, title: "Left", level: model.status.left,
                          placement: model.status.placementLeft)
-            BatteryGauge(symbol: "earbud.right", title: "Right", level: model.status.right,
+            BatteryGauge(bud: 1, title: "Right", level: model.status.right,
                          placement: model.status.placementRight)
-            BatteryGauge(symbol: "earbuds.case", title: "Case", level: model.status.caseLevel, placement: nil)
+            BatteryGauge(bud: nil, title: "Case", level: model.status.caseLevel, placement: nil)
         }
         .padding(.vertical, 12)
         .card()
@@ -171,41 +170,10 @@ struct PanelView: View {
     }
 }
 
-/// The app icon's pair of earbuds (see scripts/make-icon.swift), so the panel and the icon match.
-private struct EarbudsGlyph: View {
-    let body_: Color
-    let tips: Color
-
-    init(body: Color, tips: Color) {
-        body_ = body
-        self.tips = tips
-    }
-
-    /// The drawing lives in a 464-point square: heads at the top, stems hanging from their inner
-    /// halves, a tinted ear tip on the outer side of each head.
-    var body: some View {
-        Canvas { context, size in
-            let scale = min(size.width, size.height) / 464
-            context.translateBy(x: (size.width - 464 * scale) / 2, y: (size.height - 464 * scale) / 2)
-            context.scaleBy(x: scale, y: scale)
-            for side in [-1.0, 1.0] {
-                let x = 232 + side * 128
-                var bud = Path(ellipseIn: CGRect(x: x - 104, y: 26, width: 208, height: 208))
-                bud.addRoundedRect(in: CGRect(x: x - side * 34 - 40, y: 108, width: 80, height: 330),
-                                   cornerSize: CGSize(width: 40, height: 40))
-                context.fill(bud, with: .color(body_))
-                var tip = context
-                tip.translateBy(x: x + side * 50, y: 126)
-                tip.rotate(by: .radians(-side * 0.12))
-                tip.fill(Path(ellipseIn: CGRect(x: -34, y: -58, width: 68, height: 116)), with: .color(tips))
-            }
-        }
-    }
-}
-
 /// A ring that fills with the charge, the part's icon in the middle.
 private struct BatteryGauge: View {
-    let symbol: String
+    /// -1 for the left earbud, +1 for the right one, nil for the case.
+    let bud: CGFloat?
     let title: String
     let level: Int?
     let placement: Placement?
@@ -219,9 +187,15 @@ private struct BatteryGauge: View {
                     .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                     .animation(.easeOut(duration: 0.4), value: level)
-                Image(systemName: symbol)
-                    .font(.system(size: 21))
-                    .foregroundStyle(level == nil ? Color.secondary : Color.primary)
+                if let bud {
+                    Image(nsImage: Artwork.budImage(side: bud, points: 30,
+                                                    body: level == nil ? .secondaryLabelColor : .labelColor,
+                                                    tip: .tertiaryLabelColor))
+                } else {
+                    Image(systemName: "earbuds.case")
+                        .font(.system(size: 21))
+                        .foregroundStyle(level == nil ? Color.secondary : Color.primary)
+                }
             }
             .frame(width: 56, height: 56)
             Text(level.map { "\($0)%" } ?? "–")

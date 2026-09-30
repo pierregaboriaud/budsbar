@@ -15,7 +15,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/BudsBar"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
-cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"   # drawn by scripts/make-icon.swift
+cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"   # made by scripts/make-icon.sh
 
 IDENTITY="${CODESIGN_IDENTITY:-}"
 if [ -z "$IDENTITY" ]; then
